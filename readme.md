@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/randomrec.png" width="100" alt="Random Recorder">
+  <img src=".github/logo.png" width="200" alt="Random Recorder logo">
   <h1>Random Recorder</h1>
   <p><i>Captures short random snippets of camera and microphone for life-logging or creative recording.</i></p>
 </div>
@@ -26,7 +26,10 @@ Random Recorder runs quietly in the background. At random intervals it records a
 
 ## Screenshots
 
-<!-- Add screenshots here after publishing -->
+<div align="center">
+  <img src=".github/screenshots/screeshot_randomrec1.png" width="48%" alt="Main window">
+  <img src=".github/screenshots/screenshot_randomrec2_about.png" width="48%" alt="About window">
+</div>
 
 ## Installation
 
