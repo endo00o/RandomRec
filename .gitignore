@@ -1,0 +1,26 @@
+## .NET build outputs
+bin/
+obj/
+*.user
+
+## Visual Studio
+.vs/
+
+## User-specific files
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Settings file (user-specific)
+settings.json
+
+## Local ffmpeg (users will download their own)
+ffmpeg.exe
+
+## OS files
+Thumbs.db
+.DS_Store
+
+## Editor folders
+.idea/
+.vscode/
