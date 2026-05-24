@@ -24,3 +24,6 @@ Thumbs.db
 ## Editor folders
 .idea/
 .vscode/
+
+## Visual Studio publish profiles
+Properties/PublishProfiles/
