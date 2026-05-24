@@ -27,7 +27,7 @@ Random Recorder runs quietly in the background. At random intervals it records a
 ## Screenshots
 
 <div align="center">
-  <img src=".github/screenshots/screeshot_randomrec1.png" width="48%" alt="Main window">
+  <img src=".github/screenshots/screenshot_randomrec1.png" width="48%" alt="Main window">
   <img src=".github/screenshots/screenshot_randomrec2_about.png" width="48%" alt="About window">
 </div>
 
