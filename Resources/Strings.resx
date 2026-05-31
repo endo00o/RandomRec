@@ -216,4 +216,7 @@
   <data name="ErrInvalidDuration" xml:space="preserve">
     <value>invalid duration</value>
   </data>
+  <data name="RecordingInProgress" xml:space="preserve">
+    <value>Recording in progress...</value>
+  </data>
 </root>

@@ -10,56 +10,59 @@
 		<!-- For publishing as a single-file standalone exe -->
 		<PublishSingleFile>true</PublishSingleFile>
 		<SelfContained>true</SelfContained>
-		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+
 		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
 
 		<!-- Version info -->
-		<Version>1.0.0</Version>
-		<AssemblyVersion>1.0.0.0</AssemblyVersion>
-		<FileVersion>1.0.0.0</FileVersion>
+		<Version>1.1.0</Version>
+		<AssemblyVersion>1.1.0.0</AssemblyVersion>
+		<FileVersion>1.1.0.0</FileVersion>
 		<Authors>endo</Authors>
 		<Product>Random Recorder</Product>
 		<Description>Captures short random snippets of camera and microphone</Description>
 	</PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="assets\aboutmepfp.png" />
-    <None Remove="assets\randomrec.png" />
-    <None Remove="ffmpeg.exe" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="assets\aboutmepfp.png" />
+		<None Remove="assets\randomrec.png" />
+		<None Remove="assets\goose.png" />
+		<None Remove="assets\honk-sound.mp3" />
+		<None Remove="ffmpeg.exe" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Content Include="ffmpeg.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+	<!-- ffmpeg.exe and honk sound are embedded into the assembly and used at runtime -->
+	<ItemGroup>
+		<EmbeddedResource Include="ffmpeg.exe" />
+		<EmbeddedResource Include="assets\honk-sound.mp3" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="DirectShowLib.Net" Version="3.0.0" />
-    <PackageReference Include="NAudio" Version="2.3.0" />
-    <PackageReference Include="OpenCvSharp4.Windows" Version="4.13.0.20260302" />
-    <PackageReference Include="OpenCvSharp4.WpfExtensions" Version="4.13.0.20260427" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="DirectShowLib.Net" Version="3.0.0" />
+		<PackageReference Include="NAudio" Version="2.3.0" />
+		<PackageReference Include="OpenCvSharp4.Windows" Version="4.13.0.20260302" />
+		<PackageReference Include="OpenCvSharp4.WpfExtensions" Version="4.13.0.20260427" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Resource Include="assets\aboutmepfp.png" />
-    <Resource Include="assets\randomrec.png" />
-  </ItemGroup>
+	<ItemGroup>
+		<Resource Include="assets\aboutmepfp.png" />
+		<Resource Include="assets\randomrec.png" />
+		<Resource Include="assets\goose.png" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Resources\Strings.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Strings.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Update="Resources\Strings.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Strings.resx</DependentUpon>
+		</Compile>
+	</ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\Strings.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Update="Resources\Strings.resx">
+			<Generator>PublicResXFileCodeGenerator</Generator>
+			<LastGenOutput>Strings.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+	</ItemGroup>
 
 </Project>

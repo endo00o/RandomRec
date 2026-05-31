@@ -7,6 +7,7 @@ using NAudio.Wave;
 using VideoCapture = OpenCvSharp.VideoCapture;
 using DirectShowLib;
 using RandomRec.Resources;
+using System.Windows.Threading;
 
 namespace RandomRec
 {
@@ -18,6 +19,11 @@ namespace RandomRec
         private CameraPreview? _preview;
         private RecorderService? _recorder;
         private bool _isInitializing = true;
+        private DispatcherTimer? _recordingTimer;
+        private DateTime _recordingStartTime;
+        private GameSession? _gameSession;
+        private bool _introShown;
+        private int _gameRoundSeconds = 120;
 
         private static readonly List<(string Code, string Display)> SupportedLanguages = new()
         {
@@ -39,13 +45,25 @@ namespace RandomRec
             _recorder.OnLog = msg => Dispatcher.Invoke(() => Log(msg));
             _recorder.OnRecordingStarted = () => Dispatcher.Invoke(() =>
             {
-                RecIndicator.Visibility = Visibility.Visible;
+                RecordingOverlay.Visibility = Visibility.Visible;
+                StartRecordingTimer();
+                // На время записи останавливаем превью — камеру забирает ffmpeg
                 _preview?.Stop();
             });
             _recorder.OnRecordingStopped = () => Dispatcher.Invoke(() =>
             {
-                RecIndicator.Visibility = Visibility.Collapsed;
+                RecordingOverlay.Visibility = Visibility.Collapsed;
+                StopRecordingTimer();
+                // Возвращаем камеру предпросмотру
                 StartPreview();
+            });
+            // Игровой режим: запись спрятана — запускаем игровую сессию
+            // (она спрячет это окно и покажет игровой HUD).
+            _recorder.OnRecordingHidden = path => Dispatcher.Invoke(() =>
+            {
+                _gameSession = new GameSession(this, path, _gameRoundSeconds);
+                _gameSession.OnPlayAgain = () => StartGameRecording();
+                _gameSession.Start();
             });
 
             CameraComboBox.SelectionChanged += CameraComboBox_SelectionChanged;
@@ -195,6 +213,7 @@ namespace RandomRec
                 : System.Windows.WindowState.Maximized;
             UpdateMaximizeButtonIcon();
         }
+
         private void IconButton_Click(object sender, RoutedEventArgs e)
         {
             var about = new AboutWindow { Owner = this };
@@ -249,6 +268,46 @@ namespace RandomRec
             StopButton.IsEnabled = false;
         }
 
+        // Кнопка "Играть": стартовую заставку показываем только один раз за запуск.
+        // При повторных нажатиях (и при "Играть снова") запись стартует сразу.
+        private void PlayButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_recorder?.IsRunning == true) return;
+
+            if (!_introShown)
+            {
+                var intro = new GameIntroWindow { Owner = this };
+                intro.StartRequested = () =>
+                {
+                    intro.Close();
+                    _introShown = true;
+                    _gameRoundSeconds = intro.SelectedRoundSeconds;
+                    StartGameRecording();
+                };
+                intro.Show();
+            }
+            else
+            {
+                StartGameRecording();
+            }
+        }
+
+        // Запускает запись в игровом режиме (после неё запись прячется и стартует раунд).
+        private void StartGameRecording()
+        {
+            if (_recorder?.IsRunning == true) return;
+
+            if (!TryBuildSettings(out var settings, out string error))
+            {
+                Log(string.Format(Strings.LogInvalidSettings, error));
+                return;
+            }
+
+            settings.GameMode = true;
+            _recorder?.Start(settings);
+            Log(GameText.LogRecording);
+        }
+
         private bool TryBuildSettings(out RecorderSettings settings, out string error)
         {
             settings = new RecorderSettings();
@@ -267,6 +326,7 @@ namespace RandomRec
                 return false;
             }
             settings.CameraIndex = ParseIndex(CameraComboBox.SelectedItem.ToString());
+            settings.CameraName = ParseName(CameraComboBox.SelectedItem.ToString());
 
             if (MicrophoneComboBox.SelectedItem == null)
             {
@@ -274,6 +334,7 @@ namespace RandomRec
                 return false;
             }
             settings.MicrophoneIndex = ParseIndex(MicrophoneComboBox.SelectedItem.ToString());
+            settings.MicrophoneName = ParseName(MicrophoneComboBox.SelectedItem.ToString());
 
             if (!int.TryParse(MinIntervalTextBox.Text, out int minInt) ||
                 !int.TryParse(MaxIntervalTextBox.Text, out int maxInt) ||
@@ -306,6 +367,38 @@ namespace RandomRec
             int colon = text.IndexOf(':');
             if (colon < 0) return -1;
             return int.TryParse(text.Substring(0, colon), out int idx) ? idx : -1;
+        }
+
+        private string ParseName(string? text)
+        {
+            if (string.IsNullOrEmpty(text)) return "";
+            int colon = text.IndexOf(':');
+            if (colon < 0 || colon >= text.Length - 1) return text;
+            return text.Substring(colon + 1).Trim();
+        }
+
+        // ===== Таймер записи (REC-оверлей) =====
+
+        private void StartRecordingTimer()
+        {
+            _recordingStartTime = DateTime.Now;
+            RecordingTimerText.Text = "00:00";
+            _recordingTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _recordingTimer.Tick += (s, e) =>
+            {
+                var elapsed = DateTime.Now - _recordingStartTime;
+                RecordingTimerText.Text = $"{(int)elapsed.TotalMinutes:D2}:{elapsed.Seconds:D2}";
+            };
+            _recordingTimer.Start();
+        }
+
+        private void StopRecordingTimer()
+        {
+            _recordingTimer?.Stop();
+            _recordingTimer = null;
         }
 
         private void Log(string message)

@@ -15,6 +15,7 @@ namespace RandomRec
         {
             Settings = AppSettings.Load();
             ApplyLanguage(Settings.Language);
+
             base.OnStartup(e);
         }
 

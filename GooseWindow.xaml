@@ -1,0 +1,75 @@
+<Window x:Class="RandomRec.GooseWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Random Recorder"
+        Width="420" Height="500"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        Focusable="False"
+        IsHitTestVisible="False">
+
+    <Grid ClipToBounds="True">
+        <Image x:Name="GooseImage"
+               Source="/assets/goose.png"
+               Stretch="Uniform"
+               Height="340"
+               HorizontalAlignment="Left"
+               VerticalAlignment="Bottom">
+            <Image.RenderTransform>
+                <!-- Старт за левым-нижним углом, выезжает по диагонали (~45°) -->
+                <TranslateTransform x:Name="Slide" X="-320" Y="340"/>
+            </Image.RenderTransform>
+        </Image>
+    </Grid>
+
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <!-- Выезжает по диагонали вверх-вправо из угла -->
+                    <DoubleAnimation Storyboard.TargetName="Slide"
+                                     Storyboard.TargetProperty="X"
+                                     From="-320" To="0"
+                                     Duration="0:0:0.5"
+                                     BeginTime="0:0:0.1">
+                        <DoubleAnimation.EasingFunction>
+                            <BackEase EasingMode="EaseOut" Amplitude="0.3"/>
+                        </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="Slide"
+                                     Storyboard.TargetProperty="Y"
+                                     From="340" To="0"
+                                     Duration="0:0:0.5"
+                                     BeginTime="0:0:0.1">
+                        <DoubleAnimation.EasingFunction>
+                            <BackEase EasingMode="EaseOut" Amplitude="0.3"/>
+                        </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+
+                    <!-- Уезжает обратно по той же диагонали -->
+                    <DoubleAnimation Storyboard.TargetName="Slide"
+                                     Storyboard.TargetProperty="X"
+                                     From="0" To="-320"
+                                     Duration="0:0:0.45"
+                                     BeginTime="0:0:2.6">
+                        <DoubleAnimation.EasingFunction>
+                            <BackEase EasingMode="EaseIn" Amplitude="0.3"/>
+                        </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="Slide"
+                                     Storyboard.TargetProperty="Y"
+                                     From="0" To="340"
+                                     Duration="0:0:0.45"
+                                     BeginTime="0:0:2.6">
+                        <DoubleAnimation.EasingFunction>
+                            <BackEase EasingMode="EaseIn" Amplitude="0.3"/>
+                        </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
+</Window>

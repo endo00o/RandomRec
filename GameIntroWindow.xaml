@@ -1,0 +1,178 @@
+<Window x:Class="RandomRec.GameIntroWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:RandomRec"
+        Title="Random Recorder"
+        Height="470" Width="620"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="GameBg" Color="#0E0E0E"/>
+        <SolidColorBrush x:Key="GameAccent" Color="#CC785C"/>
+        <SolidColorBrush x:Key="GameAccentBright" Color="#E08966"/>
+        <SolidColorBrush x:Key="GameText" Color="#EDE6DD"/>
+        <SolidColorBrush x:Key="GameTextDim" Color="#8A8178"/>
+    </Window.Resources>
+
+    <Border CornerRadius="14"
+            Background="{StaticResource GameBg}"
+            BorderBrush="#332B26"
+            BorderThickness="1"
+            Margin="12"
+            RenderTransformOrigin="0.5,0.5">
+        <Border.Effect>
+            <DropShadowEffect Color="Black" Opacity="0.7" BlurRadius="24" ShadowDepth="0"/>
+        </Border.Effect>
+
+        <Border.RenderTransform>
+            <ScaleTransform x:Name="AppearScale" ScaleX="0.85" ScaleY="0.85"/>
+        </Border.RenderTransform>
+        <Border.Triggers>
+            <EventTrigger RoutedEvent="Loaded">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetName="AppearScale"
+                                         Storyboard.TargetProperty="ScaleX"
+                                         From="0.85" To="1" Duration="0:0:0.5">
+                            <DoubleAnimation.EasingFunction>
+                                <BackEase EasingMode="EaseOut" Amplitude="0.6"/>
+                            </DoubleAnimation.EasingFunction>
+                        </DoubleAnimation>
+                        <DoubleAnimation Storyboard.TargetName="AppearScale"
+                                         Storyboard.TargetProperty="ScaleY"
+                                         From="0.85" To="1" Duration="0:0:0.5">
+                            <DoubleAnimation.EasingFunction>
+                                <BackEase EasingMode="EaseOut" Amplitude="0.6"/>
+                            </DoubleAnimation.EasingFunction>
+                        </DoubleAnimation>
+                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                         From="0" To="1" Duration="0:0:0.35"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Border.Triggers>
+
+        <Grid>
+            <!-- Кнопка закрытия (отмена) -->
+            <Button x:Name="CloseButton"
+                    Content="&#x2715;"
+                    Click="CloseButton_Click"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Width="34" Height="34"
+                    Margin="0,6,6,0"
+                    Foreground="{StaticResource GameTextDim}"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    FontSize="15"
+                    Cursor="Hand">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="#2A2A2A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="30,20">
+
+                <TextBlock Text="{x:Static local:GameText.IntroTitle}"
+                           FontFamily="Times New Roman"
+                           FontSize="36"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource GameAccent}"
+                           HorizontalAlignment="Center"/>
+
+                <!-- Оранжевая рябь "от руки" -->
+                <Path Data="M0,8 C15,0 30,16 45,8 S75,0 90,8 S120,16 135,8 S165,0 180,8"
+                      Stroke="{StaticResource GameAccent}"
+                      StrokeThickness="2.5"
+                      StrokeStartLineCap="Round"
+                      StrokeEndLineCap="Round"
+                      HorizontalAlignment="Center"
+                      Margin="0,4,0,18"
+                      Opacity="0.9"/>
+
+                <TextBlock FontFamily="Times New Roman"
+                           FontSize="16"
+                           Foreground="{StaticResource GameTextDim}"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           MaxWidth="440"
+                           Text="{x:Static local:GameText.IntroDesc}"/>
+
+                <!-- Время раунда — задаёт игрок -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,24,0,0">
+                    <TextBlock Text="{x:Static local:GameText.TimeToFind}"
+                               FontFamily="Times New Roman"
+                               FontSize="16"
+                               Foreground="{StaticResource GameText}"
+                               VerticalAlignment="Center"
+                               Margin="0,0,10,0"/>
+                    <Border Background="#1C1C1C" CornerRadius="7" BorderBrush="#3A3A3A" BorderThickness="1">
+                        <TextBox x:Name="RoundTimeBox"
+                                 Text="120"
+                                 Width="64"
+                                 MaxLength="4"
+                                 Background="Transparent"
+                                 Foreground="{StaticResource GameText}"
+                                 CaretBrush="{StaticResource GameAccent}"
+                                 BorderThickness="0"
+                                 FontFamily="Times New Roman"
+                                 FontSize="17"
+                                 TextAlignment="Center"
+                                 VerticalContentAlignment="Center"
+                                 Padding="0,6"/>
+                    </Border>
+                    <TextBlock Text="{x:Static local:GameText.Seconds}"
+                               FontFamily="Times New Roman"
+                               FontSize="15"
+                               Foreground="{StaticResource GameTextDim}"
+                               VerticalAlignment="Center"
+                               Margin="9,0,0,0"/>
+                </StackPanel>
+
+                <Button Content="{x:Static local:GameText.Start}"
+                        Click="StartButton_Click"
+                        HorizontalAlignment="Center"
+                        Width="160" Height="44"
+                        Margin="0,20,0,0"
+                        Foreground="White"
+                        FontFamily="Times New Roman"
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Cursor="Hand"
+                        Background="{StaticResource GameAccent}"
+                        BorderThickness="0">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="sb" Background="{TemplateBinding Background}" CornerRadius="9">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="sb" Property="Background" Value="{StaticResource GameAccentBright}"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="sb" Property="Background" Value="#B5664C"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

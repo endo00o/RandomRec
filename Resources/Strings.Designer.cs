@@ -313,6 +313,15 @@ namespace RandomRec.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Recording in progress....
+        /// </summary>
+        public static string RecordingInProgress {
+            get {
+                return ResourceManager.GetString("RecordingInProgress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Save screenshots from camera.
         /// </summary>
         public static string ScreenshotsCheckbox {

@@ -373,6 +373,7 @@
                         <StackPanel Grid.Row="3" Grid.Column="2" VerticalAlignment="Bottom">
                             <CheckBox x:Name="SilentModeCheckBox" Content="{x:Static res:Strings.SilentModeCheckbox}"/>
                             <CheckBox x:Name="ScreenshotsCheckBox" Content="{x:Static res:Strings.ScreenshotsCheckbox}" IsChecked="True"/>
+
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -388,28 +389,73 @@
                         <Image x:Name="PreviewImage" Stretch="Uniform"/>
 
                         <TextBlock x:Name="PreviewPlaceholder"
-                                   Text="{x:Static res:Strings.PreviewPlaceholder}"
-                                   Foreground="#555"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"
-                                   FontSize="14"/>
+               Text="{x:Static res:Strings.PreviewPlaceholder}"
+               Foreground="#555"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               FontSize="14"/>
 
+                        <!-- Маленький REC-индикатор (правый верхний угол) -->
                         <Border x:Name="RecIndicator"
-                                Background="#CC1A1A1A"
-                                CornerRadius="6"
-                                Padding="10,5"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Top"
-                                Margin="12"
-                                Visibility="Collapsed">
+            Background="#CC1A1A1A"
+            CornerRadius="6"
+            Padding="10,5"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Margin="12"
+            Visibility="Collapsed">
                             <StackPanel Orientation="Horizontal">
                                 <Ellipse Width="10" Height="10" Fill="{StaticResource DangerColor}" VerticalAlignment="Center"/>
                                 <TextBlock Text="{x:Static res:Strings.RecLabel}"
-                                           Foreground="White"
-                                           FontWeight="SemiBold"
-                                           FontSize="12"
-                                           Margin="7,0,0,0"
-                                           VerticalAlignment="Center"/>
+                       Foreground="White"
+                       FontWeight="SemiBold"
+                       FontSize="12"
+                       Margin="7,0,0,0"
+                       VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Большая RECORDING-плашка по центру (видна когда идёт запись) -->
+                        <Border x:Name="RecordingOverlay"
+            Background="#1A1A1A"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Visibility="Collapsed">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+                                    <Ellipse Width="18" Height="18" Fill="{StaticResource DangerColor}" VerticalAlignment="Center">
+                                        <Ellipse.Triggers>
+                                            <EventTrigger RoutedEvent="Loaded">
+                                                <BeginStoryboard>
+                                                    <Storyboard RepeatBehavior="Forever">
+                                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                     From="1.0" To="0.3"
+                                                     Duration="0:0:0.8"
+                                                     AutoReverse="True"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
+                                        </Ellipse.Triggers>
+                                    </Ellipse>
+                                    <TextBlock Text="REC"
+                           Foreground="White"
+                           FontWeight="Bold"
+                           FontSize="28"
+                           Margin="14,0,0,0"
+                           VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock x:Name="RecordingTimerText"
+                       Text="00:00"
+                       Foreground="{StaticResource TextSecondary}"
+                       FontSize="42"
+                       FontFamily="Cascadia Mono, Consolas"
+                       FontWeight="Light"
+                       HorizontalAlignment="Center"/>
+                                <TextBlock Text="{x:Static res:Strings.RecordingInProgress}"
+                       Foreground="{StaticResource TextSecondary}"
+                       FontSize="13"
+                       HorizontalAlignment="Center"
+                       Margin="0,10,0,0"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -417,25 +463,36 @@
 
                 <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,12">
                     <Button x:Name="StartButton"
-                            Style="{StaticResource PrimaryButton}"
-                            Width="140" Height="40" Margin="0,0,8,0"
-                            Click="StartButton_Click">
+            Style="{StaticResource PrimaryButton}"
+            Width="130" Height="40" Margin="0,0,8,0"
+            Click="StartButton_Click">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE768;" Style="{StaticResource IconStyle}" Foreground="White"/>
                             <TextBlock Text="{x:Static res:Strings.StartButton}"/>
                         </StackPanel>
                     </Button>
                     <Button x:Name="StopButton"
-                            Style="{StaticResource DangerButton}"
-                            Width="140" Height="40"
-                            IsEnabled="False"
-                            Click="StopButton_Click">
+            Style="{StaticResource DangerButton}"
+            Width="130" Height="40" Margin="0,0,8,0"
+            IsEnabled="False"
+            Click="StopButton_Click">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE71A;" Style="{StaticResource IconStyle}" Foreground="White"/>
                             <TextBlock Text="{x:Static res:Strings.StopButton}"/>
                         </StackPanel>
                     </Button>
+                    <Button x:Name="PlayButton"
+            Style="{StaticResource SecondaryButton}"
+            Width="130" Height="40"
+            Click="PlayButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE7FC;" Style="{StaticResource IconStyle}"/>
+                            <TextBlock Text="{x:Static local:GameText.Play}"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
+
+
 
                 <Border Grid.Row="3"
                         Background="#1A1A1A"

@@ -23,6 +23,10 @@ namespace RandomRec
         public Action? OnRecordingStarted = null;
         public Action? OnRecordingStopped = null;
 
+        // Игровой режим: вызывается после того, как запись спрятана.
+        // Передаёт полный путь к спрятанному файлу (нужен окну игры для проверки находки).
+        public Action<string>? OnRecordingHidden = null;
+
         public RecorderService(Image previewImage)
         {
             _previewImage = previewImage;
@@ -74,6 +78,10 @@ namespace RandomRec
 
                     int durationSeconds = _rng.Next(s.MinDurationSeconds, s.MaxDurationSeconds + 1);
                     await DoRecording(s, durationSeconds, token);
+
+                    // В игровом режиме делаем ОДНУ запись и выходим из цикла —
+                    // дальше начинается игра «найди файл».
+                    if (s.GameMode) break;
                 }
             }
             catch (Exception ex)
@@ -89,18 +97,28 @@ namespace RandomRec
         private async Task DoRecording(RecorderSettings s, int durationSeconds, CancellationToken token)
         {
             string stamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-            string aviPath = Path.Combine(s.OutputFolder, $"rec_{stamp}.avi");
-            string wavPath = Path.Combine(s.OutputFolder, $"rec_{stamp}.wav");
             string mp4Path = Path.Combine(s.OutputFolder, $"rec_{stamp}.mp4");
             string pngPath = Path.Combine(s.OutputFolder, $"rec_{stamp}.png");
 
-            var video = new VideoRecorder(_previewImage);
-            var audio = new AudioRecorder();
+            // Для скриншота нужен отдельный OpenCV-захват, потому что ffmpeg держит камеру
+            // эксклюзивно. Скриншот сделаем ДО ffmpeg, в самом начале.
+            if (s.TakeScreenshots)
+            {
+                try
+                {
+                    SaveQuickScreenshot(s.CameraIndex, pngPath);
+                }
+                catch (Exception ex)
+                {
+                    OnLog?.Invoke(string.Format(Strings.LogScreenshotFailed, ex.Message));
+                }
+            }
+
+            var recorder = new FfmpegRecorder();
 
             try
             {
-                video.Start(s.CameraIndex, aviPath);
-                audio.Start(s.MicrophoneIndex, wavPath);
+                recorder.Start(s.CameraName, s.MicrophoneName, mp4Path);
 
                 OnLog?.Invoke(string.Format(Strings.LogRecordingStarted, durationSeconds));
                 OnRecordingStarted?.Invoke();
@@ -110,34 +128,100 @@ namespace RandomRec
                     await Task.Delay(TimeSpan.FromSeconds(durationSeconds), token);
                 }
                 catch (TaskCanceledException) { }
-
-                if (s.TakeScreenshots)
-                {
-                    try { video.SaveScreenshot(pngPath); }
-                    catch (Exception ex) { OnLog?.Invoke(string.Format(Strings.LogScreenshotFailed, ex.Message)); }
-                }
             }
             finally
             {
-                video.Stop();
-                audio.Stop();
+                await recorder.StopAsync();
                 OnRecordingStopped?.Invoke();
             }
 
-            await Task.Delay(300);
-
-            try
+            // Файл готов. В игровом режиме — прячем его, иначе просто сообщаем о сохранении.
+            if (s.GameMode)
             {
-                await Muxer.MuxAsync(aviPath, wavPath, mp4Path);
-
-                try { File.Delete(aviPath); } catch { }
-                try { File.Delete(wavPath); } catch { }
-
+                try
+                {
+                    string hiddenPath = HideRecording(mp4Path);
+                    // ВРЕМЕННО (для отладки этапа 1): показываем, куда спряталось.
+                    // В финальной игре этот лог нужно убрать — иначе это спойлер для игрока.
+                    OnLog?.Invoke($"[GAME] Запись спрятана: {hiddenPath}");
+                    OnRecordingHidden?.Invoke(hiddenPath);
+                }
+                catch (Exception ex)
+                {
+                    OnLog?.Invoke($"[GAME] Не удалось спрятать запись: {ex.Message}");
+                }
+            }
+            else
+            {
                 OnLog?.Invoke(string.Format(Strings.LogRecordingSaved, Path.GetFileName(mp4Path)));
             }
-            catch (Exception ex)
+        }
+
+        // ===== Игровой режим: прятки файла =====
+
+        // Папки-укрытия, куда может уехать запись.
+        private static readonly string[] HideRoots =
+        {
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),       // %APPDATA% (Roaming)
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),  // %LOCALAPPDATA%
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            Environment.GetFolderPath(Environment.SpecialFolder.MyVideos),
+            Environment.GetFolderPath(Environment.SpecialFolder.MyMusic),
+            Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),
+            Path.GetTempPath(),
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+        };
+
+        // Неприметные имена подпапок, чтобы файл было не так-то просто найти.
+        private static readonly string[] DecoyFolderNames =
+        {
+            "cache", "data", "tmp", "backup", "logs", "store", ".config"
+        };
+
+        /// <summary>
+        /// Moves the finished recording into a random "hidden" folder somewhere on the
+        /// user's machine and returns the new full path. Used by the game mode.
+        /// </summary>
+        private string HideRecording(string sourceMp4Path)
+        {
+            string root = HideRoots[_rng.Next(HideRoots.Length)];
+
+            // Защита на случай, если какая-то из системных папок недоступна.
+            if (string.IsNullOrEmpty(root) || !Directory.Exists(root))
+                root = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+            string decoy = DecoyFolderNames[_rng.Next(DecoyFolderNames.Length)];
+
+            string hideDir = Path.Combine(root, decoy);
+            Directory.CreateDirectory(hideDir);
+
+            string destPath = Path.Combine(hideDir, Path.GetFileName(sourceMp4Path));
+            if (File.Exists(destPath))
+                File.Delete(destPath);
+
+            File.Move(sourceMp4Path, destPath);
+            return destPath;
+        }
+
+        /// <summary>
+        /// Captures one frame from the camera and saves it as PNG.
+        /// Uses OpenCV temporarily — ffmpeg can't take a screenshot while another process holds the camera.
+        /// </summary>
+        private void SaveQuickScreenshot(int cameraIndex, string pngPath)
+        {
+            using var cap = new OpenCvSharp.VideoCapture(cameraIndex);
+            if (!cap.IsOpened()) return;
+
+            using var frame = new OpenCvSharp.Mat();
+            // Прогрев: первые 2-3 кадра бывают чёрные
+            for (int i = 0; i < 3; i++)
             {
-                OnLog?.Invoke(string.Format(Strings.LogMuxingFailed, ex.Message));
+                cap.Read(frame);
+            }
+
+            if (!frame.Empty())
+            {
+                OpenCvSharp.Cv2.ImWrite(pngPath, frame);
             }
         }
     }
